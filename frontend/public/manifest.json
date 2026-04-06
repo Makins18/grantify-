@@ -1,0 +1,16 @@
+{
+  "name": "Grantify: Nigerian AI Scholarship Matchmaker",
+  "short_name": "Grantify",
+  "description": "Scam-free, fast, and simple funding opportunities for Nigerian students.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
