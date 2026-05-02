@@ -28,23 +28,28 @@ export default function NotificationsPage() {
 
     useEffect(() => {
         const fetchNotifs = async () => {
-            const { data } = await supabase.from('system_pulse').select('*').order('created_at', { ascending: false }).limit(20);
-            if (data && data.length > 0) {
-                setNotifications(data.map(d => ({
-                    id: d.id,
-                    type: (d.type === 'discovery' ? 'system' : d.type === 'analysis' ? 'match' : d.type === 'verification' ? 'success' : 'alert') as NotifType,
-                    title: d.type.charAt(0).toUpperCase() + d.type.slice(1) + ' Alert',
-                    message: d.message,
-                    time: new Date(d.created_at).toLocaleTimeString(),
-                    read: false
-                })));
-            } else {
-                // Fallback to static if db is empty for demo purposes
-                setNotifications([
-                    { id: 1, type: "match", title: "New Strategic Fit Identified", message: "A 98% match for 'Lagos Smart City Infrastructure' has been detected by the RAG engine.", time: "2 mins ago", read: false },
-                    { id: 2, type: "system", title: "Intelligence Core Updated", message: "ChromaDB synchronized with 24 new West African regional portal datasets via Gemini Embeddings.", time: "1 hour ago", read: true }
-                ]);
+            try {
+                const { data, error } = await supabase.from('system_pulse').select('*').order('created_at', { ascending: false }).limit(20);
+                if (data && data.length > 0 && !error) {
+                    setNotifications(data.map(d => ({
+                        id: d.id,
+                        type: (d.type === 'discovery' ? 'system' : d.type === 'analysis' ? 'match' : d.type === 'verification' ? 'success' : 'alert') as NotifType,
+                        title: d.type.charAt(0).toUpperCase() + d.type.slice(1) + ' Alert',
+                        message: d.message,
+                        time: new Date(d.created_at).toLocaleTimeString(),
+                        read: false
+                    })));
+                    return;
+                }
+            } catch (e) {
+                console.warn("Could not fetch notifications from DB, using fallback");
             }
+            
+            // Fallback to static if db is empty or fails for demo purposes
+            setNotifications([
+                { id: 1, type: "match", title: "New Strategic Fit Identified", message: "A 98% match for 'Lagos Smart City Infrastructure' has been detected by the RAG engine.", time: "2 mins ago", read: false },
+                { id: 2, type: "system", title: "Intelligence Core Updated", message: "ChromaDB synchronized with 24 new West African regional portal datasets via Gemini Embeddings.", time: "1 hour ago", read: true }
+            ]);
         };
         fetchNotifs();
     }, []);

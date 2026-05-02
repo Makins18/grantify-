@@ -36,39 +36,57 @@ export default function EOIComposer({ opp, onClose }: Props) {
     ];
 
     useEffect(() => {
-        if (opp) {
+        if (!opp) return;
+        
+        let cancelled = false;
+
+        const generateDraft = async () => {
             setLoading(true);
-            // Simulate AI generation
-            setTimeout(() => {
-                const draft = `
-SUBJECT: Expression of Interest - ${opp.title}
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        title: opp.title,
+                        country: opp.country,
+                        type: opp.type,
+                        value: opp.value,
+                        deadline: opp.deadline,
+                        tone: tone
+                    })
+                });
+                
+                if (!response.ok) throw new Error('API Error');
+                
+                const data = await response.json();
+                if (!cancelled) {
+                    setContent(data.draft || "Failed to generate text.");
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setContent("Error connecting to Intelligence Core. Please try again later.");
+                }
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        };
 
-Dear Procurement Committee,
+        generateDraft();
 
-We are pleased to submit this Expression of Interest for the ${opp.title} project. Having successfully executed several projects in the ${opp.country} region, our team is uniquely positioned to deliver exceptional value.
-
-Our core approach aligns with the requirement for ${opp.type === "Tender" ? "efficient public infrastructure" : "sustainable development"}. We have identified that our technical capabilities in this sector will ensure a 99% uptime and compliance with all local regulations.
-
-We look forward to providing a full technical and commercial proposal.
-
-Sincerely,
-[Your Name/Organization]
-        `.trim();
-                setContent(draft);
-                setLoading(false);
-            }, 2500);
-        }
-    }, [opp]);
+        return () => {
+            cancelled = true;
+        };
+    }, [opp, tone]);
 
     if (!opp) return null;
 
     return (
         <motion.div
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed inset-0 z-[110] bg-background flex flex-col lg:flex-row"
+            className="fixed inset-0 z-[110] bg-background flex"
         >
-            {/* Left: Metadata Sidebar */}
-            <div className="w-full md:w-[350px] border-r border-white/5 p-8 space-y-8 bg-white/[0.01]">
+            {/* Left: Metadata Sidebar - Hidden on mobile */}
+            <div className="hidden lg:block w-[320px] border-r border-white/5 p-8 space-y-8 bg-white/[0.01] overflow-y-auto">
                 <button
                     onClick={onClose}
                     className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-4 group"
@@ -109,35 +127,34 @@ Sincerely,
             </div>
 
             {/* Middle: Workspace */}
-            <div className="flex-1 flex flex-col bg-slate-900/20">
-                <header className="p-6 border-b border-white/5 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center">
-                            <Type size={18} />
+            <div className="flex-1 flex flex-col bg-[var(--background)] relative min-w-0">
+                <header className="p-4 md:p-6 border-b border-white/5 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3 md:gap-4 min-w-0">
+                        <button onClick={onClose} className="lg:hidden p-2 bg-white/5 rounded-lg shrink-0">
+                            <X size={18} />
+                        </button>
+                        <div className="w-8 h-8 md:w-10 md:h-10 bg-white/5 rounded-xl flex items-center justify-center shrink-0">
+                            <Type size={16} />
                         </div>
-                        <div>
-                            <h2 className="font-bold text-lg">AI Draft Composer</h2>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em]">Contextual Intelligence Workspace</p>
+                        <div className="min-w-0">
+                            <h2 className="font-bold text-sm md:text-lg truncate">{opp.title}</h2>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-[0.2em] truncate">AI Draft Composer</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <button className="p-3 glass-card rounded-xl hover:bg-white/5 transition-colors" title="Copy to Clipboard">
+                    <div className="flex items-center gap-2 md:gap-3 shrink-0">
+                        <button className="hidden md:block p-3 glass-card rounded-xl hover:bg-white/5 transition-colors" title="Copy to Clipboard">
                             <Copy size={18} />
                         </button>
-                        <button className="px-6 py-3 bg-white/5 border border-white/10 rounded-xl font-bold hover:bg-white/10 transition-colors flex items-center gap-2">
-                            <Download size={18} />
-                            Export PDF
-                        </button>
-                        <button className="px-6 py-3 bg-primary text-background rounded-xl font-bold hover:bg-white hover:text-primary transition-all flex items-center gap-2 shadow-lg shadow-primary/20">
-                            <Send size={18} />
-                            Submit Interest
+                        <button className="px-4 py-2 md:px-6 md:py-3 bg-primary text-background rounded-xl font-bold hover:scale-105 transition-all flex items-center gap-2 shadow-lg shadow-primary/20 text-xs md:text-sm">
+                            <Send size={16} />
+                            <span className="hidden md:inline">Submit Interest</span>
                         </button>
                     </div>
                 </header>
 
-                <div className="flex-1 p-8 md:p-12 overflow-y-auto">
-                    <div className="max-w-3xl mx-auto min-h-full glass-card rounded-[2rem] p-12 md:p-16 shadow-2xl relative">
+                <div className="flex-1 p-4 md:p-8 overflow-y-auto">
+                    <div className="max-w-4xl mx-auto h-full min-h-[500px] glass-card rounded-2xl md:rounded-[2rem] p-6 md:p-12 shadow-2xl relative border-white/5">
                         {loading ? (
                             <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6">
                                 <div className="relative">
@@ -161,8 +178,8 @@ Sincerely,
                 </div>
             </div>
 
-            {/* Right Sidebar: Premium Help */}
-            <div className="w-full lg:w-[320px] border-l border-white/5 p-8 bg-white/[0.01] overflow-y-auto">
+            {/* Right Sidebar: Premium Help - Hidden on mobile */}
+            <div className="hidden xl:block w-[320px] border-l border-white/5 p-8 bg-white/[0.01] overflow-y-auto">
                 <div className="flex items-center gap-2 mb-6">
                     <HelpCircle size={18} className="text-secondary" />
                     <h4 className="text-xs font-bold uppercase tracking-widest text-slate-300">In-Depth Guidance</h4>

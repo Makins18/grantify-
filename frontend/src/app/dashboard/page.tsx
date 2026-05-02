@@ -106,7 +106,7 @@ function DashboardContent() {
         ));
       }
       setLoading(false);
-    }, 800);
+    }, 300);
     return () => clearTimeout(t);
   }, [query]);
 
@@ -183,9 +183,8 @@ function DashboardContent() {
 }
 
 export default async function Dashboard() {
-  // Simulate heavy server-side RAG Engine query or Redis Miss (2.5 seconds)
-  // This explicitly triggers the new Gemini-style `loading.tsx` suspense boundary.
-  await new Promise((resolve) => setTimeout(resolve, 2500));
+  // Simulate heavy server-side RAG Engine query or Redis Miss (reduced for speed)
+  await new Promise((resolve) => setTimeout(resolve, 300));
 
   return (
     <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold">Resyncing Cache...</div>}>

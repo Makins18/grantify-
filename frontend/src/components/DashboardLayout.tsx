@@ -16,8 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 const NAV = [
     { icon: LayoutDashboard, label: "Overview", href: "/dashboard" },
     { icon: Search, label: "Explore", href: "/dashboard/explore" },
-    { icon: FileText, label: "My Applications", href: "/dashboard/applications" },
-    { icon: Award, label: "Grants & Awards", href: "/dashboard/explore?filter=grants" },
+    { icon: FileText, label: "Applications", href: "/dashboard/applications" },
     { icon: Bell, label: "Notifications", href: "/dashboard/notifications" },
     { icon: Settings, label: "Settings", href: "/dashboard/settings" },
 ];
@@ -162,7 +161,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </aside>
 
             {/* ── Main Content ── */}
-            <main className="flex-1 overflow-y-auto relative z-10 pb-20 lg:pb-0">
+            <main className="flex-1 overflow-x-hidden overflow-y-auto relative z-10 pb-24 lg:pb-0 bg-[var(--background)]">
                 {children}
             </main>
 
@@ -187,7 +186,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                     )}
                                 </div>
                                 <span className="text-[9px] font-bold uppercase tracking-wider">
-                                    {label === "My Applications" ? "Apps" : label === "Grants & Awards" ? "Grants" : label}
+                                    {label}
                                 </span>
                             </Link>
                         );

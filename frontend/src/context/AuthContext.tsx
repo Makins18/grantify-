@@ -26,6 +26,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Check for Demo Mode first
+        if (typeof document !== 'undefined' && document.cookie.includes('grantify_demo=true')) {
+            setUser({ id: "demo-user-123", email: "demo@grantify.co" } as any);
+            setProfile({ id: "demo-user-123", full_name: "Demo Reviewer", premium_tier: true });
+            setLoading(false);
+            return;
+        }
+
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null);
