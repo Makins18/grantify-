@@ -1,6 +1,7 @@
 import { Sparkles, ArrowRight, ExternalLink } from "lucide-react";
 import EvidenceLogDropdown, { EvidenceLog, VerificationStatus } from "./EvidenceLogDropdown";
 import VoiceNotePlayer from "./VoiceNotePlayer";
+import AudioReader from "@/components/AudioReader";
 import Link from "next/link";
 
 type Grant = {

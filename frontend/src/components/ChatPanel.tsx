@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     MessageCircle,
@@ -59,15 +60,19 @@ export default function ChatPanel() {
     }, [messages, loading]);
 
     const fetchHistory = async (sid: string) => {
+        if (!sid) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:3001";
+            console.log(`Fetching history from: ${apiUrl}/api/v1/chat/history/${sid}`);
             const res = await fetch(`${apiUrl}/api/v1/chat/history/${sid}`);
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data);
+            } else {
+                console.warn(`History fetch failed with status: ${res.status}`);
             }
         } catch (err) {
-            console.error("Failed to load history:", err);
+            console.error("Failed to load history (Network Error):", err);
         }
     };
 
@@ -167,9 +172,9 @@ export default function ChatPanel() {
                         {/* Header */}
                         <div className="p-5 border-b border-white/5 bg-white/5 flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <div className="w-11 h-11 bg-primary/20 rounded-2xl flex items-center justify-center p-2 border border-primary/20">
+                                <Link href="/" className="w-11 h-11 bg-primary/20 rounded-2xl flex items-center justify-center p-2 border border-primary/20 hover:scale-105 transition-transform">
                                     <Logo />
-                                </div>
+                                </Link>
                                 <div className="leading-tight">
                                     <h3 className="font-bold text-base tracking-tight text-white">Grantify AI</h3>
                                     <div className="flex items-center gap-1.5">

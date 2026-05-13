@@ -5,26 +5,15 @@ import { useSearchParams } from "next/navigation";
 import { Search, ArrowRight, Zap, SlidersHorizontal } from "lucide-react";
 import { LazyOpportunityCard, Opportunity } from "@/components/LazyOpportunityCard";
 import { SkeletonGrid } from "@/components/SkeletonCard";
+import AudioReader from "@/components/AudioReader";
 import OpportunityModal from "@/components/OpportunityModal";
 import EOIComposer from "@/components/EOIComposer";
 import { AnimatePresence } from "framer-motion";
 
-const CATEGORIES = ["All", "Tenders", "Grants", "Scholarships"];
+import { ALL_OPPORTUNITIES } from "@/lib/data";
+import OpportunityCard from "@/components/OpportunityCard";
 
-const DEMO: Opportunity[] = [
-    { id: 1, title: "Lagos Smart City Infrastructure", country: "Nigeria", type: "Tender", value: "₦5.8B", deadline: "Mar 12, 2026", aiScore: 98 },
-    { id: 2, title: "Sustainable Agriculture Tech Grant", country: "Kenya", type: "Grant", value: "$250K", deadline: "Apr 05, 2026", aiScore: 94 },
-    { id: 3, title: "African Youth Leadership Scholarship", country: "Pan-Africa", type: "Scholarship", value: "Full", deadline: "May 20, 2026", aiScore: 91 },
-    { id: 4, title: "Solar Energy Expansion — Gauteng", country: "South Africa", type: "Tender", value: "R12.4M", deadline: "Mar 30, 2026", aiScore: 89 },
-    { id: 5, title: "Digital Health Innovation Grant", country: "Ghana", type: "Grant", value: "$180K", deadline: "Jun 10, 2026", aiScore: 87 },
-    { id: 6, title: "Pan-African Fintech Accelerator", country: "Pan-Africa", type: "Grant", value: "$500K", deadline: "Apr 22, 2026", aiScore: 85 },
-    { id: 7, title: "Kigali Smart Mobility Tender", country: "Rwanda", type: "Tender", value: "$3.2M", deadline: "May 01, 2026", aiScore: 83 },
-    { id: 8, title: "East Africa STEM Postgrad Scholarship", country: "East Africa", type: "Scholarship", value: "Full+", deadline: "Jul 15, 2026", aiScore: 80 },
-    { id: 9, title: "Nigeria Road Infrastructure Bid", country: "Nigeria", type: "Tender", value: "₦12B", deadline: "Sep 10, 2026", aiScore: 74 },
-    { id: 10, title: "Africa CDC Health Systems Award", country: "Pan-Africa", type: "Grant", value: "$2M", deadline: "Oct 01, 2026", aiScore: 72 },
-    { id: 11, title: "Nairobi Water Treatment Tender", country: "Kenya", type: "Tender", value: "$8.4M", deadline: "Aug 01, 2026", aiScore: 78 },
-    { id: 12, title: "West Africa Digital Inclusion Grant", country: "Ghana", type: "Grant", value: "$300K", deadline: "Jun 25, 2026", aiScore: 76 },
-];
+const CATEGORIES = ["All", "Tenders", "Grants", "Scholarships"];
 
 export default function ExplorePage() {
     return (
@@ -47,18 +36,15 @@ function ExploreContent() {
     const [selectedOpp, setSelectedOpp] = useState<Opportunity | null>(null);
     const [composingOpp, setComposingOpp] = useState<Opportunity | null>(null);
 
-    // Fetch from backend; fall back to local demo data
     useEffect(() => {
         let cancelled = false;
         const load = async () => {
             setLoading(true);
             try {
-                const API = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:3001";
-                const res = await fetch(`${API}/api/v1/opportunities`);
-                const data = await res.json();
-                if (!cancelled) setAllResults(data?.length > 0 ? data : DEMO);
+                // Simulate fast fetch or use shared data
+                if (!cancelled) setAllResults(ALL_OPPORTUNITIES);
             } catch {
-                if (!cancelled) setAllResults(DEMO);
+                if (!cancelled) setAllResults(ALL_OPPORTUNITIES);
             } finally {
                 if (!cancelled) setLoading(false);
             }
@@ -73,28 +59,28 @@ function ExploreContent() {
         return matchCat && matchQ;
     });
 
-    const handleSearch = (e: React.FormEvent) => { e.preventDefault(); /* filtering is reactive */ };
+    const handleSearch = (e: React.FormEvent) => { e.preventDefault(); };
 
     return (
         <div className="p-6 md:p-10 min-h-screen">
             <header className="mb-10">
-                <h1 className="text-4xl font-bold mb-2">Strategic Discovery</h1>
-                <p className="text-slate-400">Harness semantic vector search to find high-probability opportunities across Africa.</p>
+                <h1 className="text-4xl font-black tracking-tight mb-2">Strategic Discovery</h1>
+                <p className="text-zinc-500 font-medium">Harness semantic vector search to find high-probability opportunities across Africa.</p>
             </header>
 
             {/* Search Bar */}
             <form onSubmit={handleSearch} className="relative group max-w-3xl mb-8">
                 <div className="absolute inset-0 bg-primary/10 blur-3xl opacity-0 group-focus-within:opacity-100 transition-opacity rounded-3xl" />
-                <div className="relative flex items-center glass-card rounded-[2rem] border-white/10 shadow-2xl p-2">
-                    <Search className="ml-5 text-slate-500 shrink-0" size={22} />
+                <div className="relative flex items-center glass-card rounded-[2rem] border-zinc-200 dark:border-white/10 shadow-2xl p-2 bg-white dark:bg-[#121214]">
+                    <Search className="ml-5 text-zinc-500 shrink-0" size={22} />
                     <input
                         type="text"
                         value={query}
                         onChange={e => setQuery(e.target.value)}
                         placeholder="Search by keyword, region, or sector..."
-                        className="flex-1 bg-transparent border-none outline-none px-5 py-4 text-lg placeholder:text-slate-600 font-medium"
+                        className="flex-1 bg-transparent border-none outline-none px-5 py-4 text-lg placeholder:text-zinc-600 font-medium text-zinc-900 dark:text-white"
                     />
-                    <button type="submit" className="px-8 py-4 bg-primary text-background font-bold rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 flex items-center gap-2 shrink-0">
+                    <button type="submit" className="px-8 py-4 bg-primary text-white font-black rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl shadow-primary/20 flex items-center gap-2 shrink-0">
                         Search <ArrowRight size={18} />
                     </button>
                 </div>
@@ -107,8 +93,8 @@ function ExploreContent() {
                         key={cat}
                         onClick={() => setActiveCategory(cat)}
                         className={`px-6 py-2.5 rounded-2xl font-bold text-sm transition-all whitespace-nowrap border ${activeCategory === cat
-                                ? "bg-primary text-background border-primary shadow-lg shadow-primary/20"
-                                : "glass-card border-white/5 text-slate-400 hover:text-white hover:bg-white/5"
+                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
+                                : "glass-card border-zinc-200 dark:border-white/5 text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
                             }`}
                     >
                         {cat}
@@ -119,10 +105,6 @@ function ExploreContent() {
                         )}
                     </button>
                 ))}
-                <div className="h-8 w-px bg-white/10 mx-2" />
-                <button className="flex items-center gap-2 px-5 py-2.5 glass-card rounded-2xl text-slate-400 border border-white/5 hover:text-white text-sm font-bold">
-                    <SlidersHorizontal size={16} /> Filters
-                </button>
             </div>
 
             {/* Results */}
@@ -132,12 +114,12 @@ function ExploreContent() {
                 <div className="text-center py-24 space-y-4 opacity-50">
                     <Zap className="mx-auto" size={48} />
                     <h3 className="text-xl font-bold">No results found</h3>
-                    <p className="text-slate-500">Try different keywords or category filters.</p>
+                    <p className="text-zinc-500">Try different keywords or category filters.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                     {filtered.map((opp, i) => (
-                        <LazyOpportunityCard key={opp.id} opp={opp} index={i} onOpen={o => setSelectedOpp(o)} />
+                        <OpportunityCard key={opp.id} opp={opp} index={i} onOpen={o => setSelectedOpp(o)} />
                     ))}
                 </div>
             )}

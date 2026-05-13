@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import AudioReader from "@/components/AudioReader";
 import { Bell, ChevronRight, Clock, Info, CheckCircle2, AlertCircle, Trash2, BellOff } from "lucide-react";
 import { supabase } from "@/lib/supabaseClient";
 

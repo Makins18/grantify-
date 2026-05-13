@@ -64,8 +64,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const signOut = async () => {
         await supabase.auth.signOut();
+        // Clear demo cookie
+        document.cookie = "grantify_demo=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
         setUser(null);
         setProfile(null);
+        window.location.href = "/login";
     };
 
     return (

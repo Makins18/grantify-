@@ -22,7 +22,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     );
 }
 
-// Re-export hook to prevent breaking changes in imports
+// Re-export hook with helper functions
 export function useTheme() {
-    return useNextTheme();
+    const { theme, setTheme, resolvedTheme } = useNextTheme();
+    const toggleTheme = () => setTheme(resolvedTheme === "dark" ? "light" : "dark");
+    return { theme, setTheme, toggleTheme, resolvedTheme };
 }

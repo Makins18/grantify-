@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
@@ -15,6 +15,8 @@ from logger import setup_system_logging, log_cache_event, log_error, get_recent_
 from vector_store import get_store
 from scheduler import start_scheduler, stop_scheduler, get_scheduler_status
 import google.generativeai as genai
+from document_processor import DocumentProcessor
+from audio_service import AudioService
 
 load_dotenv()
 setup_system_logging()
@@ -49,7 +51,18 @@ async def lifespan(app: FastAPI):
     stop_scheduler()
 
 
+from fastapi.staticfiles import StaticFiles
+import os
+
 app = FastAPI(title="Grantify AI — Scholarship & Grant Service", lifespan=lifespan)
+audio_service = AudioService(output_dir="data/audio")
+
+# Ensure directory exists
+if not os.path.exists("data/audio"):
+    os.makedirs("data/audio")
+
+# Serve static files
+app.mount("/audio", StaticFiles(directory="data/audio"), name="audio")
 
 app.add_middleware(
     CORSMiddleware,
@@ -372,6 +385,38 @@ async def clear_chat_history(session_id: str):
         redis_client.delete(f"chat:{session_id}")
         redis_client.delete(f"trace:{session_id}")
     return {"status": "cleared", "session_id": session_id}
+
+
+# ── Ingestion & Audio ─────────────────────────────────────────────────────────
+
+@app.post("/ingest/file")
+async def ingest_document(file: UploadFile = File(...)):
+    """Ingest a PDF or DOCX file and return extracted text."""
+    try:
+        content = await file.read()
+        text = DocumentProcessor.extract_text(content, file.filename)
+        return {
+            "filename": file.filename,
+            "text": text,
+            "char_count": len(text)
+        }
+    except Exception as e:
+        logger.error(f"Ingestion error: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/audio/generate")
+async def generate_audio(data: Dict[str, str]):
+    """Generate audio and lyrics from text."""
+    text = data.get("text")
+    if not text:
+        raise HTTPException(status_code=400, detail="Text is required")
+    
+    try:
+        result = audio_service.generate_audio_and_lyrics(text)
+        return result
+    except Exception as e:
+        logger.error(f"Audio generation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ── Admin ─────────────────────────────────────────────────────────────────────

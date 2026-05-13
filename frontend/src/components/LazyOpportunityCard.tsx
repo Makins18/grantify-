@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { BarChart3, Award, MapPin, Calendar, Star, MoreVertical } from "lucide-react";
+import { BarChart3, Award, MapPin, Calendar, Star, MoreVertical, Volume2 } from "lucide-react";
 
 export interface Opportunity {
     id: number | string;
@@ -64,7 +64,24 @@ export function LazyOpportunityCard({ opp, index, onOpen }: Props) {
                 </div>
             </div>
 
-            <div className="flex items-center gap-8">
+            <div className="flex items-center gap-6">
+                {/* Audio Summary Trigger */}
+                <button 
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        // Logic to trigger audio summary will be handled by parent or a global audio player
+                    }}
+                    className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-zinc-500 hover:text-primary hover:border-primary/20 transition-all group/audio relative"
+                    title="Generate Audio Summary"
+                >
+                    <Volume2 size={18} />
+                    <motion.div 
+                        className="absolute inset-0 rounded-full border border-primary/40 opacity-0 group-hover/audio:opacity-100"
+                        animate={{ scale: [1, 1.2, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                    />
+                </button>
+
                 {/* Unique Grantify Success Predictor */}
                 <div className="hidden lg:flex flex-col items-center gap-1 group/predictor">
                     <div className="relative w-14 h-14 flex items-center justify-center">
@@ -110,9 +127,6 @@ export function LazyOpportunityCard({ opp, index, onOpen }: Props) {
                 </div>
                 <button className="px-6 py-2 bg-white/5 rounded-xl font-bold hover:bg-primary hover:text-background transition-all border border-white/5 shadow-xl">
                     Apply Now
-                </button>
-                <button className="p-2 text-slate-500 hover:text-white transition-colors">
-                    <MoreVertical size={20} />
                 </button>
             </div>
         </motion.div>

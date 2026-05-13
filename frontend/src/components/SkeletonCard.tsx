@@ -27,11 +27,27 @@ export function SkeletonCard() {
     );
 }
 
-export function SkeletonGrid({ count = 4 }: { count?: number }) {
+export function SkeletonGrid({ count = 6 }: { count?: number }) {
     return (
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
             {Array.from({ length: count }).map((_, i) => (
-                <SkeletonCard key={i} />
+                <div key={i} className="glass-card p-6 rounded-[2rem] flex flex-col gap-6 animate-pulse border border-white/5">
+                    <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 bg-zinc-100 dark:bg-white/5 rounded-2xl shrink-0" />
+                        <div className="flex-1 space-y-3 pt-1">
+                            <div className="h-5 bg-zinc-100 dark:bg-white/5 rounded-lg w-3/4" />
+                            <div className="h-3 bg-zinc-100 dark:bg-white/5 rounded w-1/2" />
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <div className="h-3 bg-zinc-100 dark:bg-white/5 rounded w-full" />
+                        <div className="h-3 bg-zinc-100 dark:bg-white/5 rounded w-2/3" />
+                    </div>
+                    <div className="mt-auto pt-4 border-t border-zinc-100 dark:border-white/5 flex justify-between">
+                        <div className="h-4 bg-zinc-100 dark:bg-white/5 rounded w-20" />
+                        <div className="h-9 bg-zinc-100 dark:bg-white/5 rounded-xl w-24" />
+                    </div>
+                </div>
             ))}
         </div>
     );

@@ -3,6 +3,7 @@
 import { useSubscription } from "@/context/SubscriptionContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useAuth } from "@/context/AuthContext";
+import AudioReader from "@/components/AudioReader";
 import { Settings, User, CreditCard, Shield, LogOut, ChevronRight, Check, Zap, Sun, Moon } from "lucide-react";
 import Logo from "@/components/Logo";
 import { motion } from "framer-motion";

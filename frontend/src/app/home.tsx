@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { Search, Loader2, Sparkles, ShieldCheck } from "lucide-react";
+import Logo from "@/components/Logo";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import FeatureCard from "@/components/FeatureCard";
-import BackgroundGlow from "@/components/BackgroundGlow";
 
 export default function Home() {
     const [query, setQuery] = useState("");
@@ -23,7 +23,11 @@ export default function Home() {
 
     return (
         <div className="flex-1 bg-white dark:bg-[#0A0A0B] relative overflow-hidden font-sans">
-            <BackgroundGlow />
+            {/* ── Background Elements ── */}
+            <div className="absolute inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]" />
+            </div>
 
             {/* ── Hero Section ── */}
             <section className="relative z-10 pt-20 md:pt-32 pb-20 px-6">
@@ -77,21 +81,45 @@ export default function Home() {
                             </div>
                         </motion.div>
 
-                        <HeroVisualization />
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ duration: 1, delay: 0.2 }}
+                            className="relative hidden lg:block"
+                        >
+                            <div className="relative z-10 bg-zinc-100 dark:bg-[#121214] border border-zinc-200 dark:border-white/5 rounded-[2.5rem] p-4 shadow-2xl overflow-hidden aspect-square flex items-center justify-center">
+                                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent" />
+                                <div className="text-center">
+                                    <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                                        <Sparkles size={48} className="text-primary" />
+                                    </div>
+                                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Vector Synthesis</h3>
+                                    <p className="text-zinc-500 dark:text-zinc-400 font-medium">Matching your profile with <br/> neural precision.</p>
+                                </div>
+                                
+                                {/* Floating Badges */}
+                                <div className="absolute top-12 right-12 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl border border-zinc-100 dark:border-white/5 animate-bounce-slow">
+                                    <ShieldCheck className="text-primary mb-2" size={24} />
+                                    <div className="h-1.5 w-12 bg-zinc-200 dark:bg-zinc-700 rounded-full" />
+                                </div>
+                                <div className="absolute bottom-12 left-12 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl border border-zinc-100 dark:border-white/5 animate-float">
+                                    <div className="flex gap-1 mb-2">
+                                        {[1,2,3].map(i => <div key={i} className="w-2 h-2 rounded-full bg-primary/40" />)}
+                                    </div>
+                                    <div className="h-1.5 w-16 bg-zinc-200 dark:bg-zinc-700 rounded-full" />
+                                </div>
+                            </div>
+                            
+                            {/* Decorative Elements */}
+                            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 blur-3xl rounded-full" />
+                            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 blur-3xl rounded-full" />
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
             {/* ── Feature Grid ── */}
             <section className="py-24 px-6 relative z-10">
-                <div className="max-w-7xl mx-auto text-center mb-16">
-                    <h2 className="text-3xl md:text-5xl font-black mb-6">How Grantify Works</h2>
-                    <p className="text-zinc-500 dark:text-zinc-400 max-w-2xl mx-auto font-medium">
-                        We've built the first Contextual Intelligence OS for the Nigerian student ecosystem. 
-                        No more searching through obsolete PDF lists or falling for application scams.
-                    </p>
-                </div>
-
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         <FeatureCard 
@@ -112,65 +140,22 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-
-            {/* ── Detailed Overview ── */}
-            <section className="py-24 px-6 relative z-10 bg-zinc-50 dark:bg-white/[0.02] border-y border-zinc-200 dark:border-white/5">
-                <div className="max-w-5xl mx-auto text-center">
-                    <h2 className="text-4xl font-black mb-12 tracking-tight text-zinc-900 dark:text-white">Empowering Nigerian Ambition</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 text-left">
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-bold text-primary">The Grantify Mission</h3>
-                            <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
-                                Grantify was founded on a simple premise: Nigerian students deserve world-class access to funding without the friction of bureaucracy or the danger of fraud. We leverage advanced RAG (Retrieval-Augmented Generation) technology to index thousands of local and international opportunities.
-                            </p>
-                        </div>
-                        <div className="space-y-6">
-                            <h3 className="text-xl font-bold text-secondary">Beyond Search</h3>
-                            <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed font-medium">
-                                We don't just show you where the money is; we help you get it. From automated Statement of Purpose (SOP) drafting to real-time application tracking and cognitive feedback on your profile, Grantify is your strategic partner in academic and professional growth.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
         </div>
     );
 }
 
-function HeroVisualization() {
+
+function FeatureCard({ icon: Icon, title, desc }: { icon: any, title: string, desc: string }) {
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className="relative hidden lg:block"
+        <motion.div 
+            whileHover={{ y: -5 }}
+            className="p-8 rounded-[2rem] bg-[#0a0a0a] border border-white/5 hover:border-primary/20 transition-all group"
         >
-            <div className="relative z-10 bg-zinc-100 dark:bg-[#121214] border border-zinc-200 dark:border-white/5 rounded-[2.5rem] p-4 shadow-2xl overflow-hidden aspect-square flex items-center justify-center">
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 to-transparent" />
-                <div className="text-center">
-                    <div className="w-24 h-24 bg-primary/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
-                        <Sparkles size={48} className="text-primary" />
-                    </div>
-                    <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Vector Synthesis</h3>
-                    <p className="text-zinc-500 dark:text-zinc-400 font-medium">Matching your profile with <br/> neural precision.</p>
-                </div>
-                
-                {/* Floating Badges */}
-                <div className="absolute top-12 right-12 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl border border-zinc-100 dark:border-white/5 animate-bounce-slow">
-                    <ShieldCheck className="text-primary mb-2" size={24} />
-                    <div className="h-1.5 w-12 bg-zinc-200 dark:bg-zinc-700 rounded-full" />
-                </div>
-                <div className="absolute bottom-12 left-12 bg-white dark:bg-zinc-800 p-4 rounded-2xl shadow-xl border border-zinc-100 dark:border-white/5 animate-float">
-                    <div className="flex gap-1 mb-2">
-                        {[1,2,3].map(i => <div key={i} className="w-2 h-2 rounded-full bg-primary/40" />)}
-                    </div>
-                    <div className="h-1.5 w-16 bg-zinc-200 dark:bg-zinc-700 rounded-full" />
-                </div>
+            <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                <Icon size={24} className="text-zinc-500 group-hover:text-primary transition-colors" />
             </div>
-            
-            {/* Decorative Elements */}
-            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 blur-3xl rounded-full" />
-            <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/10 blur-3xl rounded-full" />
+            <h3 className="text-lg font-bold mb-3">{title}</h3>
+            <p className="text-zinc-500 text-sm leading-relaxed">{desc}</p>
         </motion.div>
     );
 }

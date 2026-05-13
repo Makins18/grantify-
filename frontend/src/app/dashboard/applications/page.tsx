@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import AudioReader from "@/components/AudioReader";
 import { FileText, ChevronRight, Clock, Target, ArrowUpRight, Search, Trash2, PenTool } from "lucide-react";
 import EOIComposer from "@/components/EOIComposer";
 import { Opportunity } from "@/components/LazyOpportunityCard";
@@ -152,8 +153,8 @@ export default function ApplicationsPage() {
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-6 w-full md:w-auto shrink-0">
-                                <div className="flex-1 md:w-44 space-y-2">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 w-full md:w-auto shrink-0">
+                                <div className="w-full sm:w-44 space-y-2">
                                     <div className="flex justify-between text-[10px] font-bold uppercase tracking-widest">
                                         <span className="text-slate-500">Readiness</span>
                                         <span className="text-primary">{app.progress}%</span>
@@ -168,17 +169,17 @@ export default function ApplicationsPage() {
                                     </div>
                                 </div>
 
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 justify-end">
                                     <button
                                         onClick={() => setComposingOpp({ id: app.id, title: app.title, country: app.country, type: app.type as any, value: app.value, deadline: app.deadline, aiScore: app.aiScore })}
-                                        className="p-3 bg-primary/10 hover:bg-primary hover:text-background text-primary rounded-2xl transition-all"
+                                        className="flex-1 sm:flex-none p-3 bg-primary/10 hover:bg-primary hover:text-background text-primary rounded-2xl transition-all flex justify-center items-center"
                                         title="Resume Editing"
                                     >
                                         <ArrowUpRight size={18} />
                                     </button>
                                     <button
                                         onClick={() => removeDraft(app.id)}
-                                        className="p-3 glass-card hover:bg-rose-500/10 hover:text-rose-400 text-slate-500 rounded-2xl transition-all opacity-0 group-hover:opacity-100"
+                                        className="flex-1 sm:flex-none p-3 glass-card hover:bg-rose-500/10 hover:text-rose-400 text-slate-500 rounded-2xl transition-all opacity-100 sm:opacity-0 group-hover:opacity-100 flex justify-center items-center"
                                         title="Remove Draft"
                                     >
                                         <Trash2 size={18} />

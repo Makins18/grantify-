@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     X,
@@ -13,9 +14,12 @@ import {
     DollarSign,
     PenTool,
     ShieldCheck,
-    Cpu
+    Cpu,
+    Volume2,
+    Music,
+    Loader2
 } from "lucide-react";
-import { Opportunity } from "./LazyOpportunityCard";
+import { Opportunity } from "@/lib/types";
 import { useSubscription } from "@/context/SubscriptionContext";
 
 interface Props {
@@ -26,6 +30,30 @@ interface Props {
 
 export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
     const { stealthMode } = useSubscription();
+    const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
+    const [audioUrl, setAudioUrl] = useState<string | null>(null);
+
+    const score = opp?.matchScore || opp?.aiScore || 0;
+
+    const generateAudioSummary = async () => {
+        if (!opp) return;
+        setIsGeneratingAudio(true);
+        try {
+            const summary = `Opportunity Summary: ${opp.title} in ${opp.country}. It's a ${opp.type} valued at ${opp.value} with a deadline of ${opp.deadline}. Our AI matching score is ${opp.aiScore} percent.`;
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/generate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: summary }),
+            });
+            const data = await response.json();
+            setAudioUrl(`${process.env.NEXT_PUBLIC_API_URL}${data.audio_url}`);
+        } catch (err) {
+            console.error("Audio generation failed", err);
+        } finally {
+            setIsGeneratingAudio(false);
+        }
+    };
+
     if (!opp) return null;
 
     return (
@@ -61,7 +89,7 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                         </div>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto p-8 md:p-14 pt-16 space-y-12 scrollbar-thin scrollbar-thumb-white/10">
+                    <div className="flex-1 overflow-y-auto p-8 md:p-14 pt-16 space-y-12 scrollbar-hide">
                         {/* Title & Core Meta */}
                         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
                             <div className="space-y-3">
@@ -77,11 +105,11 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                             </div>
 
                             <div className="flex items-center gap-5 p-5 glass-card rounded-[2rem] border-white/10 pr-10 bg-white/5 shadow-inner">
-                                <MatchGauge score={opp.aiScore} />
+                                <MatchGauge score={score} />
                                 <div>
                                     <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">{stealthMode ? 'Alignment Efficiency' : 'Vector Space Match'}</p>
                                     <div className="flex items-baseline gap-2">
-                                        <span className="text-3xl font-black tracking-tighter">{opp.aiScore}%</span>
+                                        <span className="text-3xl font-black tracking-tighter">{score}%</span>
                                         <span className="text-sm font-bold text-primary italic">{stealthMode ? 'Optimal' : 'Match'}</span>
                                     </div>
                                 </div>
@@ -93,7 +121,7 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                             <StatItem icon={<Globe className="text-primary" size={20} />} label="Territory" value={opp.country} />
                             <StatItem icon={<DollarSign className="text-emerald-400" size={20} />} label="Valuation" value={opp.value} />
                             <StatItem icon={<Clock className="text-amber-400" size={20} />} label="Deadlock" value={opp.deadline} />
-                            <StatItem icon={<Cpu className="text-secondary" size={20} />} label="Logic Tier" value={opp.aiScore > 90 ? "Top Alpha" : "Strategic"} />
+                            <StatItem icon={<Cpu className="text-secondary" size={20} />} label="Logic Tier" value={score > 90 ? "Top Alpha" : "Strategic"} />
                         </div>
 
                         {/* AI Intelligence Section */}
@@ -115,8 +143,8 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                                     </div>
                                     <ul className="space-y-4">
                                         <ReasonItem text="Matches your high-frequency deployment history in similar verticals." />
-                                        <ReasonItem text="High semantic overlap with your previous 'Project Odyssey' documentation." />
-                                        <ReasonItem text="Your technical architecture satisfies 98% of the 'Digital Backbone' requirement." />
+                                        <ReasonItem text="High semantic overlap with your previous documentation." />
+                                        <ReasonItem text="Your technical architecture satisfies 98% of the requirement." />
                                     </ul>
                                 </div>
                                 <div className="p-8 rounded-[2.5rem] bg-amber-500/[0.03] border border-amber-500/10 space-y-5 shadow-inner">
@@ -127,7 +155,7 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                                         <p className="text-sm font-black text-amber-400 uppercase tracking-widest">Risk Mitigation</p>
                                     </div>
                                     <ul className="space-y-4">
-                                        <ReasonItem text="Compressed timeline: Requires rapid resource allocation within 72 hours." />
+                                        <ReasonItem text="Compressed timeline: Requires rapid resource allocation." />
                                         <ReasonItem text="Pending compliance validation for regional data residency." />
                                     </ul>
                                 </div>
@@ -153,16 +181,18 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-[10px] font-black uppercase tracking-widest text-white">Active Grounding</span>
-                                    <span className="text-[10px] opacity-60">Verified via ChromaDB Enterprise & Gemini V2</span>
+                                    <span className="text-[10px] opacity-60">Verified via ChromaDB & Gemini</span>
                                 </div>
                             </div>
                         </div>
                         <div className="flex items-center gap-4 w-full md:w-auto">
                             <button
-                                onClick={onClose}
-                                className="px-10 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all flex-1 md:flex-none border border-white/10"
+                                onClick={generateAudioSummary}
+                                disabled={isGeneratingAudio}
+                                className="px-6 py-5 rounded-[1.5rem] font-black uppercase tracking-widest text-[10px] bg-white/5 border border-white/10 text-zinc-400 hover:text-white transition-all flex items-center justify-center gap-2 group disabled:opacity-30"
                             >
-                                Dismiss
+                                {isGeneratingAudio ? <Loader2 size={14} className="animate-spin text-primary" /> : <Volume2 size={16} className="text-primary group-hover:scale-110 transition-transform" />}
+                                {isGeneratingAudio ? "Generating..." : "Audio Brief"}
                             </button>
                             <button
                                 onClick={() => onDraft(opp)}
@@ -174,6 +204,26 @@ export default function OpportunityModal({ opp, onClose, onDraft }: Props) {
                             </button>
                         </div>
                     </div>
+
+                    {/* Simple Audio Player for Brief */}
+                    <AnimatePresence>
+                        {audioUrl && (
+                            <motion.div 
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                className="px-10 py-4 bg-primary/10 border-t border-primary/20 flex items-center justify-between"
+                            >
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-black">
+                                        <Music size={14} />
+                                    </div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary">Playing AI Summary Brief...</span>
+                                </div>
+                                <audio autoPlay controls src={audioUrl} className="h-8 max-w-[200px] opacity-60 hover:opacity-100 transition-opacity" />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </motion.div>
             </div>
         </AnimatePresence>
@@ -190,8 +240,8 @@ function MatchGauge({ score }: { score: number }) {
             <svg className="w-full h-full transform -rotate-90">
                 <defs>
                     <linearGradient id="gaugeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="var(--primary)" />
-                        <stop offset="100%" stopColor="var(--secondary)" />
+                        <stop offset="0%" stopColor="#00ff66" />
+                        <stop offset="100%" stopColor="#008751" />
                     </linearGradient>
                 </defs>
                 <circle
@@ -220,13 +270,6 @@ function MatchGauge({ score }: { score: number }) {
                 <span className="text-[10px] font-black text-primary opacity-50 uppercase tracking-tighter">AI</span>
                 <span className="text-lg font-black tracking-tighter text-white">{score}</span>
             </div>
-
-            {/* Pulse effect */}
-            <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0, 0.2, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-                className="absolute inset-0 bg-primary/20 rounded-full -z-10"
-            />
         </div>
     );
 }
@@ -237,7 +280,7 @@ function StatItem({ icon, label, value }: { icon: React.ReactNode; label: string
             <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-br from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="p-3 bg-white/5 rounded-xl w-fit group-hover:scale-110 transition-transform">{icon}</div>
             <div>
-                <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] mb-1">{label}</p>
+                <p className="text-[10px] text-zinc-500 uppercase font-black tracking-[0.2em] mb-1">{label}</p>
                 <p className="text-sm font-black text-white truncate">{value}</p>
             </div>
         </div>
@@ -246,7 +289,7 @@ function StatItem({ icon, label, value }: { icon: React.ReactNode; label: string
 
 function ReasonItem({ text }: { text: string }) {
     return (
-        <li className="flex items-start gap-4 text-[13px] text-slate-400 leading-relaxed font-medium">
+        <li className="flex items-start gap-4 text-[13px] text-zinc-400 leading-relaxed font-medium">
             <div className="w-1.5 h-1.5 bg-primary rounded-full mt-2 shrink-0 shadow-[0_0_8px_var(--primary)]" />
             {text}
         </li>

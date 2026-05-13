@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY });
+// Initialize AI with stable environment variable access
+const genAI = new GoogleGenAI(process.env.GOOGLE_API_KEY || "");
 
 export async function POST(req: Request) {
     try {
@@ -10,6 +11,8 @@ export async function POST(req: Request) {
         if (!process.env.GOOGLE_API_KEY) {
             return NextResponse.json({ error: "Missing GOOGLE_API_KEY" }, { status: 500 });
         }
+
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
 You are an elite, expert Grant Writer and Technical Proposal Architect working for Grantify, a premier strategic advisory firm focusing on opportunities in Africa.
@@ -29,15 +32,13 @@ Instructions:
 2. Adapt the language exactly to the requested tone (${tone}).
 3. Use placeholder brackets (e.g., [Your Organization Name]) where user-specific input is required.
 4. Ensure the content addresses the specific 'Opportunity Type' (e.g., if it's a Tender, focus on technical delivery and cost-efficiency. If it's a Grant, focus on sustainable impact and methodology. If it's a Scholarship, focus on academic excellence and future goals).
-5. Output ONLY the raw proposal text. Do not include markdown code blocks or introductory conversational filler like "Here is your draft".
+5. Output ONLY the raw proposal text. Do not include markdown code blocks or introductory conversational filler.
 `;
 
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: prompt,
-        });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
 
-        return NextResponse.json({ draft: response.text });
+        return NextResponse.json({ draft: text });
     } catch (error: any) {
         console.error("Gemini Generation Error:", error);
         return NextResponse.json({ error: "Failed to generate AI response." }, { status: 500 });

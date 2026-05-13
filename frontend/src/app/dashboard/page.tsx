@@ -2,8 +2,11 @@
 
 import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { Search, BrainCircuit, Zap, ShieldCheck } from "lucide-react";
+import { Search, BrainCircuit, Zap, ShieldCheck, Menu, X, ArrowLeft } from "lucide-react";
 import GrantCard from "@/components/GrantCard";
+import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
+import AudioReader from "@/components/AudioReader";
 
 const API_MOCK_DATA = [
   {
@@ -84,25 +87,27 @@ const API_MOCK_DATA = [
   }
 ];
 
+import { ALL_OPPORTUNITIES } from "@/lib/data";
+import OpportunityCard from "@/components/OpportunityCard";
+
 function DashboardContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get("q") || "";
-  
+
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState(API_MOCK_DATA);
+  const [results, setResults] = useState(ALL_OPPORTUNITIES);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate AI Vector Search delay
     setLoading(true);
     const t = setTimeout(() => {
       if (!query) {
-        setResults(API_MOCK_DATA);
+        setResults(ALL_OPPORTUNITIES);
       } else {
         const lower = query.toLowerCase();
-        setResults(API_MOCK_DATA.filter(g => 
-          g.title.toLowerCase().includes(lower) || 
-          g.description.toLowerCase().includes(lower)
+        setResults(ALL_OPPORTUNITIES.filter(g =>
+          g.title.toLowerCase().includes(lower) ||
+          g.description?.toLowerCase().includes(lower)
         ));
       }
       setLoading(false);
@@ -111,83 +116,48 @@ function DashboardContent() {
   }, [query]);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Top Navbar / Search Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-slate-800 p-4 md:px-8 flex flex-col md:flex-row items-center gap-6">
-        <div className="flex items-center gap-3 w-full md:w-auto shrink-0">
-          <div className="w-8 h-8 flex items-center justify-center bg-primary text-background rounded-lg font-black text-xl tracking-tighter">G</div>
-          <span className="font-black text-xl tracking-tighter hidden md:block">Grantify</span>
-        </div>
-        
-        {/* Main Search Bar */}
-        <div className="flex-1 w-full max-w-3xl relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-5 h-5 group-focus-within:text-primary transition-colors" />
-          <input 
-            type="text" 
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search matching scholarships..."
-            className="w-full bg-slate-900 border border-slate-800 focus:border-primary/50 text-white rounded-full py-3.5 pl-12 pr-6 shadow-xl focus:shadow-primary/5 outline-none transition-all"
-          />
+    <div className="p-6 md:p-10 min-h-screen bg-background">
+      <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tight mb-2">Welcome Back,</h1>
+          <p className="text-zinc-500 font-medium">Your intelligence core has identified {results.length} new matches.</p>
         </div>
 
-        <div className="hidden md:flex items-center gap-4 shrink-0">
-          <span className="px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-            <ShieldCheck className="w-3 h-3" /> Spam Guard Active
-          </span>
-          <div className="w-10 h-10 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-sm font-bold text-slate-300">
-            ME
-          </div>
+        <div className="flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/20 rounded-xl text-primary text-xs font-black uppercase tracking-widest animate-pulse">
+            <Zap size={14} /> AI Sync Active
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="max-w-4xl mx-auto px-4 py-8 md:py-12">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h2 className="text-sm font-black uppercase tracking-widest text-slate-500 border-b border-primary/30 pb-2 inline-block">
-              Intelligent Matches
-            </h2>
-            <p className="text-slate-400 text-sm mt-2">
-              {loading ? "RAG Engine querying vector database..." : `Found ${results.length} verified opportunities for you.`}
-            </p>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-bold bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
-            <Zap className="w-3 h-3 text-secondary" />
-            Sorted by AI Match
-          </div>
-        </div>
-
+      {/* Results Container */}
+      <div className="space-y-6 max-w-5xl">
         {loading ? (
           <div className="space-y-6">
             {[1, 2, 3].map(i => (
-              <div key={i} className="w-full h-48 bg-slate-900/50 rounded-2xl animate-pulse border border-slate-800" />
+              <div key={i} className="w-full h-48 bg-zinc-100 dark:bg-white/5 rounded-[2rem] animate-pulse border border-zinc-200 dark:border-white/5" />
             ))}
           </div>
         ) : results.length === 0 ? (
-          <div className="py-24 flex flex-col items-center text-center">
-            <BrainCircuit className="w-16 h-16 text-slate-700 mb-6" />
-            <h3 className="text-xl font-bold text-slate-300 mb-2">No Verified Matches Found</h3>
-            <p className="text-slate-500 max-w-md">Our agents couldn't find any verified grants matching your exact criteria. We filter out hundreds of scams daily.</p>
+          <div className="py-24 flex flex-col items-center text-center px-4 opacity-50">
+            <BrainCircuit className="w-16 h-16 text-zinc-300 mb-6" />
+            <h3 className="text-xl font-bold">No High-Probability Matches</h3>
+            <p className="text-sm text-zinc-500 max-w-md mt-2">Try adjusting your search criteria or checking back later as new opportunities are indexed hourly.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {results.map(grant => (
-              <GrantCard key={grant.id} grant={grant} />
+          <div className="grid grid-cols-1 gap-6">
+            {results.map((opp, i) => (
+              <OpportunityCard key={opp.id} opp={opp} index={i} />
             ))}
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
 
-export default async function Dashboard() {
-  // Simulate heavy server-side RAG Engine query or Redis Miss (reduced for speed)
-  await new Promise((resolve) => setTimeout(resolve, 300));
 
+export default function Dashboard() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold">Resyncing Cache...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center text-primary font-bold text-sm">Resyncing Cache...</div>}>
       <DashboardContent />
     </Suspense>
   );

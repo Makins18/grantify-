@@ -4,6 +4,8 @@ import { SubscriptionProvider } from "@/context/SubscriptionContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import FullScreenAlert from "@/components/FullScreenAlert";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -32,13 +34,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${inter.variable} ${outfit.variable} antialiased font-sans`}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${inter.variable} ${outfit.variable} antialiased font-sans min-h-screen flex flex-col bg-white dark:bg-[#0A0A0B]`}>
         <ThemeProvider>
           <div className="bg-mesh" />
           <AuthProvider>
             <SubscriptionProvider>
-              {children}
+              <Header />
+              <main className="flex-1 flex flex-col">
+                {children}
+              </main>
+              <Footer />
               <FullScreenAlert />
             </SubscriptionProvider>
           </AuthProvider>

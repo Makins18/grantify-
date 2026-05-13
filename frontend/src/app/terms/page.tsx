@@ -1,44 +1,51 @@
 "use client";
 
-import { motion } from "framer-motion";
+import React from "react";
+import AudioReader from "@/components/AudioReader";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Scale } from "lucide-react";
 
-export default function TermsOfUse() {
-  return (
-    <div className="min-h-screen bg-background relative overflow-hidden text-foreground">
-      <div className="fixed inset-0 bg-mesh opacity-20 pointer-events-none" />
-      
-      <nav className="absolute top-0 w-full p-6 z-20 flex justify-between items-center">
-        <Link href="/" className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors group text-sm font-bold">
-          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" /> Back to Home
-        </Link>
-      </nav>
+const TERMS_TEXT = `Welcome to the Grantify Terms and Conditions. By accessing this platform, you agree to a rigid, non-negotiable set of rules designed to protect the integrity of the grant discovery process. 
+Rule one: Honesty. All profile information, essays, and documents submitted must be completely truthful. Fraudulent applications will result in immediate and permanent bans. 
+Rule two: Platform usage. Grantify's AI tools are designed to assist, not to deceive. You may not use automated scripts to mass-apply or scrape data from our platform. Our infrastructure is heavily monitored for malicious activity. 
+Rule three: Grantor obligations. B2B partners must fulfill all promised funding if a candidate successfully meets their criteria. Any attempt to bait-and-switch applicants will result in legal action and removal from the platform. 
+Rule four: Service availability. While we strive for 24/7 uptime, Grantify reserves the right to suspend services for critical security updates or maintenance. 
+These terms establish a foundation of trust. If you cannot abide by these rigid conditions, you must exit the platform immediately.`;
 
-      <main className="relative z-10 pt-32 pb-24 px-6 max-w-4xl mx-auto">
-        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mb-16">
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter mb-4 text-white">
-            Terms of Use
-          </h1>
-          <p className="text-slate-400">Last updated: May 2026</p>
-        </motion.div>
+export default function TermsPage() {
+    return (
+        <main className="min-h-screen bg-white dark:bg-[#0A0A0B] text-zinc-900 dark:text-zinc-100 py-12 px-4 sm:px-6">
+            <div className="max-w-3xl mx-auto">
+                <Link href="/" className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 mb-8 transition-colors">
+                    <ArrowLeft size={16} /> Back to Home
+                </Link>
 
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
-          className="glass-card rounded-[2rem] p-8 md:p-12 border border-white/5 shadow-xl prose prose-invert max-w-none text-slate-300"
-        >
-          <p className="mb-6">Welcome to Grantify. By accessing or using our platform, you agree to be bound by these Terms of Use.</p>
+                <div className="flex items-center gap-4 mb-8">
+                    <div className="p-3 bg-primary/10 rounded-xl text-primary">
+                        <Scale size={32} />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl sm:text-4xl font-black tracking-tight">Terms & Conditions</h1>
+                        <p className="text-zinc-500 dark:text-zinc-400 font-medium">Clear Rules for a Fair Ecosystem.</p>
+                    </div>
+                </div>
 
-          <h3 className="text-xl font-bold mt-8 mb-4 text-white">1. Eligibility</h3>
-          <p className="mb-6">Grantify is designed exclusively for Nigerian citizens, residents, and organizations. Falsifying your identity, location, or academic status to secure grants is a violation of these terms and may result in a permanent ban and reporting to relevant authorities.</p>
+                <div className="mb-12">
+                    <h2 className="text-sm font-bold uppercase tracking-widest text-zinc-400 mb-4">Listen & Read Along</h2>
+                    <AudioReader text={TERMS_TEXT} title="Grantify Terms of Service (Audio Version)" />
+                </div>
 
-          <h3 className="text-xl font-bold mt-8 mb-4 text-white">2. AI Assistance Disclaimer</h3>
-          <p className="mb-6">Our AI Assistant is a tool to help you draft and refine your applications. You are solely responsible for the final submission. Grantify does not guarantee that using the AI will result in a successful grant application.</p>
-
-          <h3 className="text-xl font-bold mt-8 mb-4 text-white">3. Sponsor Grants</h3>
-          <p className="mb-6">Grantify acts as a facilitator between students and B2B sponsors. The final decision on fund disbursement rests entirely with the sponsor. We are not liable for delayed or cancelled grant programs initiated by third-party sponsors.</p>
-        </motion.div>
-      </main>
-    </div>
-  );
+                <div className="prose prose-zinc dark:prose-invert max-w-none">
+                    <h3>1. User Responsibilities</h3>
+                    <p>
+                        Every user is solely responsible for the accuracy of their application materials. Grantify provides AI assistance but does not guarantee success. The liability for the content of applications rests entirely with the user.
+                    </p>
+                    <h3>2. Intellectual Property</h3>
+                    <p>
+                        The Grantify platform, including its AI architecture, algorithms, and unique UI features (such as the AudioReader and Success Predictor) are the exclusive intellectual property of Grantify Inc.
+                    </p>
+                </div>
+            </div>
+        </main>
+    );
 }

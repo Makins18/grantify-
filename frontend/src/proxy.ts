@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request: {
       headers: request.headers,
@@ -36,10 +36,21 @@ export async function middleware(request: NextRequest) {
   // Protect /dashboard routes
   const isDemo = request.cookies.has('grantify_demo');
 
-  if (!user && !isDemo && request.nextUrl.pathname.startsWith('/dashboard')) {
+  // Strict separation: standard users vs B2B partners
+  if (!user && !isDemo && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/b2b/dashboard'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
+  }
+
+  if (user && request.nextUrl.pathname.startsWith('/b2b/dashboard')) {
+    // Assuming B2B partners have a specific role in metadata
+    const role = user.user_metadata?.role;
+    if (role !== 'b2b_partner') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/dashboard' // Redirect unauthorized users back to normal dashboard
+      return NextResponse.redirect(url)
+    }
   }
 
   // Redirect to dashboard if logged in and on login/home page
@@ -60,6 +71,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - any files with extensions
      */
     '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],

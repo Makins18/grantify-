@@ -12,8 +12,11 @@ import {
     Send,
     Loader2,
     Trash2,
-    Type
+    Type,
+    Upload,
+    Volume2
 } from "lucide-react";
+import AudioReader from "./AudioReader";
 import { Opportunity } from "./LazyOpportunityCard";
 import { useSubscription } from "@/context/SubscriptionContext";
 import { HelpCircle, Info, Lock } from "lucide-react";
@@ -27,6 +30,9 @@ export default function EOIComposer({ opp, onClose }: Props) {
     const [content, setContent] = useState("");
     const [loading, setLoading] = useState(true);
     const [tone, setTone] = useState("Professional");
+    const [audioData, setAudioData] = useState<any>(null);
+    const [isProcessingFile, setIsProcessingFile] = useState(false);
+    const [isGeneratingAudio, setIsGeneratingAudio] = useState(false);
     const { isPremium } = useSubscription();
 
     const IN_DEPTH_TIPS = [
@@ -77,6 +83,51 @@ export default function EOIComposer({ opp, onClose }: Props) {
             cancelled = true;
         };
     }, [opp, tone]);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsProcessingFile(true);
+        const formData = new FormData();
+        formData.append("file", file);
+
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ingest/file`, {
+                method: "POST",
+                body: formData,
+            });
+            const data = await response.json();
+            if (data.text) {
+                setContent(prev => prev + "\n\n" + data.text);
+            }
+        } catch (err) {
+            console.error("File ingestion failed", err);
+        } finally {
+            setIsProcessingFile(false);
+        }
+    };
+
+    const generateAudio = async () => {
+        if (!content) return;
+        setIsGeneratingAudio(true);
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/audio/generate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text: content }),
+            });
+            const data = await response.json();
+            setAudioData({
+                ...data,
+                audio_url: `${process.env.NEXT_PUBLIC_API_URL}${data.audio_url}`
+            });
+        } catch (err) {
+            console.error("Audio generation failed", err);
+        } finally {
+            setIsGeneratingAudio(false);
+        }
+    };
 
     if (!opp) return null;
 
@@ -154,26 +205,76 @@ export default function EOIComposer({ opp, onClose }: Props) {
                 </header>
 
                 <div className="flex-1 p-4 md:p-8 overflow-y-auto">
-                    <div className="max-w-4xl mx-auto h-full min-h-[500px] glass-card rounded-2xl md:rounded-[2rem] p-6 md:p-12 shadow-2xl relative border-white/5">
-                        {loading ? (
-                            <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6">
-                                <div className="relative">
-                                    <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                                    <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary animate-pulse" size={24} />
+                    <div className="max-w-4xl mx-auto h-full min-h-[500px] glass-card rounded-2xl md:rounded-[2rem] p-6 md:p-12 shadow-2xl relative border-white/5 flex flex-col">
+                        
+                        {/* Audio & Lyrics Reader */}
+                        <AnimatePresence>
+                            {audioData && (
+                                <motion.div 
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: "auto" }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    className="mb-8"
+                                >
+                                    <AudioReader 
+                                        text={content} 
+                                        title={opp.title} 
+                                        audioUrl={audioData.audio_url} 
+                                        lyrics={audioData.lyrics} 
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="flex-1 relative">
+                            {loading ? (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center space-y-6">
+                                    <div className="relative">
+                                        <div className="w-16 h-16 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                                        <Sparkles className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary animate-pulse" size={24} />
+                                    </div>
+                                    <div className="text-center">
+                                        <p className="font-bold text-lg">Synthesizing Proposal...</p>
+                                        <p className="text-sm text-slate-500">Analyzing {opp.title} requirements</p>
+                                    </div>
                                 </div>
-                                <div className="text-center">
-                                    <p className="font-bold text-lg">Synthesizing Proposal...</p>
-                                    <p className="text-sm text-slate-500">Analyzing {opp.title} requirements</p>
-                                </div>
+                            ) : (
+                                <textarea
+                                    value={content}
+                                    onChange={(e) => setContent(e.target.value)}
+                                    className="w-full h-full bg-transparent border-none outline-none resize-none font-sans text-lg leading-relaxed text-slate-200 placeholder-slate-600 min-h-[400px]"
+                                    placeholder="The AI is thinking..."
+                                />
+                            )}
+                        </div>
+
+                        {/* Document Upload Footer */}
+                        <div className="mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <div className="flex items-center gap-3">
+                                <label className="cursor-pointer group">
+                                    <input 
+                                        type="file" 
+                                        className="hidden" 
+                                        accept=".pdf,.docx,.txt"
+                                        onChange={handleFileUpload} 
+                                    />
+                                    <div className="px-4 py-2 bg-white/5 hover:bg-white/10 rounded-xl flex items-center gap-2 transition-all border border-white/10 group-hover:border-primary/30">
+                                        <Upload size={16} className="text-primary" />
+                                        <span className="text-xs font-bold text-zinc-400 group-hover:text-white">Upload Context (PDF/DOCX)</span>
+                                    </div>
+                                </label>
+                                {isProcessingFile && <Loader2 size={16} className="animate-spin text-primary" />}
                             </div>
-                        ) : (
-                            <textarea
-                                value={content}
-                                onChange={(e) => setContent(e.target.value)}
-                                className="w-full h-full bg-transparent border-none outline-none resize-none font-sans text-lg leading-relaxed text-slate-200 placeholder-slate-600"
-                                placeholder="The AI is thinking..."
-                            />
-                        )}
+                            
+                            <button 
+                                onClick={generateAudio}
+                                disabled={!content || isGeneratingAudio}
+                                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary/60 hover:text-primary transition-all disabled:opacity-30"
+                            >
+                                <Volume2 size={14} />
+                                {isGeneratingAudio ? "Generating Sync..." : "Sync Audio & Lyrics"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
