@@ -4,22 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-    MessageCircle,
-    Send,
-    X,
-    ExternalLink,
-    ChevronDown,
-    Loader2,
-    ListRestart,
-    Terminal,
-    Search,
-    BrainCircuit,
-    Layers,
-    Share2,
-    Copy,
-    Linkedin,
-    Mail as MailIcon,
-    Check
+    MessageCircle, Send, X, ExternalLink, ChevronDown,
+    Loader2, ListRestart, Terminal, Search, BrainCircuit,
+    Layers, Share2, Copy, Linkedin, Mail as MailIcon, Check
 } from "lucide-react";
 import Logo from "./Logo";
 import { useSubscription } from "@/context/SubscriptionContext";
@@ -31,6 +18,109 @@ interface Message {
     thought_trace?: string[];
 }
 
+// ── DRY Subcomponents ──────────────────────────────────────
+
+const ShareButton = ({ icon: Icon, colorClass, onClick }: { icon: any, colorClass: string, onClick: () => void }) => (
+    <button onClick={onClick} className={`p-1.5 rounded-lg transition-all ${colorClass}`}>
+        <Icon size={14} />
+    </button>
+);
+
+const MessageActions = ({ content, idx, copyIdx, onCopy, onShare }: any) => (
+    <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-1">
+            <button 
+                onClick={() => onCopy(content, idx)}
+                className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-primary flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
+            >
+                {copyIdx === String(idx) ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
+                {copyIdx === String(idx) ? "Copied" : "Copy"}
+            </button>
+        </div>
+        <div className="flex items-center gap-1.5">
+            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest mr-1">Share:</span>
+            <ShareButton icon={MessageCircle} colorClass="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400" onClick={() => onShare(content, 'whatsapp')} />
+            <ShareButton icon={Linkedin} colorClass="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400" onClick={() => onShare(content, 'linkedin')} />
+            <ShareButton icon={MailIcon} colorClass="bg-slate-500/10 hover:bg-slate-500/20 text-slate-400" onClick={() => onShare(content, 'email')} />
+        </div>
+    </div>
+);
+
+const ThoughtTraceViewer = ({ trace, showTrace, onToggle, idx }: any) => (
+    <div className="mt-3 overflow-hidden">
+        <button
+            onClick={() => onToggle(showTrace === String(idx) ? null : String(idx))}
+            className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider hover:opacity-80 transition-opacity"
+        >
+            <Terminal size={12} />
+            {showTrace === String(idx) ? "Hide Trace" : "Thinking Pulse"}
+            <ChevronDown size={12} className={`transition-transform ${showTrace === String(idx) ? "rotate-180" : ""}`} />
+        </button>
+        <AnimatePresence>
+            {showTrace === String(idx) && (
+                <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="mt-2 space-y-1.5"
+                >
+                    {trace.map((step: string, sIdx: number) => (
+                        <div key={sIdx} className="flex gap-2 items-start text-[11px] font-mono text-slate-400 bg-black/20 p-2 rounded-lg border border-white/5">
+                            <span className="text-primary/50">{sIdx + 1}.</span>
+                            <span>{step}</span>
+                        </div>
+                    ))}
+                </motion.div>
+            )}
+        </AnimatePresence>
+    </div>
+);
+
+const CitationVectors = ({ sources }: { sources: any[] }) => (
+    <div className="mt-4 pt-4 border-t border-white/10">
+        <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+            <Layers size={10} />
+            Citation Vectors
+        </div>
+        <div className="flex flex-wrap gap-2">
+            {sources.map((s, idx) => (
+                <a
+                    key={idx}
+                    href={s.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-[10px] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-xl transition-all border border-white/5 group"
+                >
+                    <Search size={10} className="text-primary" />
+                    <span className="max-w-[100px] truncate">{s.title || s.source}</span>
+                    <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
+                </a>
+            ))}
+        </div>
+    </div>
+);
+
+const LoadingIndicator = () => (
+    <div className="flex justify-start">
+        <div className="bg-white/5 border border-white/10 p-5 rounded-3xl rounded-tl-none flex flex-col gap-3 w-3/4">
+            <div className="flex items-center gap-2">
+                <Loader2 size={16} className="animate-spin text-primary" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase animate-pulse">Scanning Vector Space...</span>
+            </div>
+            <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                <motion.div
+                    initial={{ x: "-100%" }}
+                    animate={{ x: "100%" }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                    className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent"
+                />
+            </div>
+        </div>
+    </div>
+);
+
+// ── Main ChatPanel ───────────────────────────────────────────
+
 export default function ChatPanel() {
     const { stealthMode } = useSubscription();
     const [isOpen, setIsOpen] = useState(false);
@@ -38,10 +128,10 @@ export default function ChatPanel() {
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
     const [sessionId, setSessionId] = useState<string>("");
-    const [showTrace, setShowTrace] = useState<string | null>(null); // message index
+    const [showTrace, setShowTrace] = useState<string | null>(null);
+    const [copyIdx, setCopyIdx] = useState<string | null>(null);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Initialize session and load history
     useEffect(() => {
         let sid = localStorage.getItem("ts_session_id");
         if (!sid) {
@@ -52,7 +142,6 @@ export default function ChatPanel() {
         fetchHistory(sid);
     }, []);
 
-    // Auto-scroll to bottom
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
@@ -63,16 +152,13 @@ export default function ChatPanel() {
         if (!sid) return;
         try {
             const apiUrl = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:3001";
-            console.log(`Fetching history from: ${apiUrl}/api/v1/chat/history/${sid}`);
             const res = await fetch(`${apiUrl}/api/v1/chat/history/${sid}`);
             if (res.ok) {
                 const data = await res.json();
                 setMessages(data);
-            } else {
-                console.warn(`History fetch failed with status: ${res.status}`);
             }
         } catch (err) {
-            console.error("Failed to load history (Network Error):", err);
+            console.error("Failed to load history:", err);
         }
     };
 
@@ -141,8 +227,6 @@ export default function ChatPanel() {
         }
     };
 
-    const [copyIdx, setCopyIdx] = useState<string | null>(null);
-
     return (
         <div className="fixed bottom-6 right-6 z-50">
             <AnimatePresence>
@@ -184,27 +268,17 @@ export default function ChatPanel() {
                                 </div>
                             </div>
                             <div className="flex items-center gap-1">
-                                <button
-                                    onClick={clearHistory}
-                                    className="p-2.5 text-slate-400 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/5"
-                                    title="Reset Conversation"
-                                >
+                                <button onClick={clearHistory} className="p-2.5 text-slate-400 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/5" title="Reset Conversation">
                                     <ListRestart size={18} />
                                 </button>
-                                <button
-                                    onClick={() => setIsOpen(false)}
-                                    className="p-2.5 text-slate-400 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/5"
-                                >
+                                <button onClick={() => setIsOpen(false)} className="p-2.5 text-slate-400 hover:text-white transition-colors bg-white/5 rounded-xl border border-white/5">
                                     <X size={20} />
                                 </button>
                             </div>
                         </div>
 
                         {/* Messages Area */}
-                        <div
-                            ref={scrollRef}
-                            className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin scrollbar-thumb-white/10"
-                        >
+                        <div ref={scrollRef} className="flex-1 overflow-y-auto p-5 space-y-6 scrollbar-thin scrollbar-thumb-white/10">
                             {messages.length === 0 && !loading && (
                                 <div className="text-center py-20 px-10">
                                     <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-4 border border-white/5">
@@ -216,99 +290,16 @@ export default function ChatPanel() {
                             )}
 
                             {messages.map((m, i) => (
-                                <div
-                                    key={i}
-                                    className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}
-                                >
+                                <div key={i} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"}`}>
                                     <div className={`max-w-[88%] p-4 rounded-3xl text-sm leading-relaxed whitespace-pre-wrap ${m.role === "user"
                                         ? "bg-primary text-background font-semibold rounded-tr-none shadow-xl shadow-primary/20"
                                         : "bg-white/5 border border-white/10 rounded-tl-none text-slate-100"
                                         }`}>
                                         {m.content}
 
-                                        {/* Sharing & Copy Actions (AI only) */}
-                                        {m.role === "model" && (
-                                            <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
-                                                <div className="flex items-center gap-1">
-                                                    <button 
-                                                        onClick={() => handleCopy(m.content, i)}
-                                                        className="p-1.5 hover:bg-white/10 rounded-lg transition-colors text-slate-400 hover:text-primary flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider"
-                                                    >
-                                                        {copyIdx === String(i) ? <Check size={12} className="text-emerald-400" /> : <Copy size={12} />}
-                                                        {copyIdx === String(i) ? "Copied" : "Copy"}
-                                                    </button>
-                                                </div>
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest mr-1">Share:</span>
-                                                    <button onClick={() => handleShare(m.content, 'whatsapp')} className="p-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg text-emerald-400 transition-all">
-                                                        <MessageCircle size={14} />
-                                                    </button>
-                                                    <button onClick={() => handleShare(m.content, 'linkedin')} className="p-1.5 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg text-blue-400 transition-all">
-                                                        <Linkedin size={14} />
-                                                    </button>
-                                                    <button onClick={() => handleShare(m.content, 'email')} className="p-1.5 bg-slate-500/10 hover:bg-slate-500/20 rounded-lg text-slate-400 transition-all">
-                                                        <MailIcon size={14} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Thought Trace Expansion */}
-                                        {m.role === "model" && m.thought_trace && (
-                                            <div className="mt-3 overflow-hidden">
-                                                <button
-                                                    onClick={() => setShowTrace(showTrace === String(i) ? null : String(i))}
-                                                    className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase tracking-wider hover:opacity-80 transition-opacity"
-                                                >
-                                                    <Terminal size={12} />
-                                                    {showTrace === String(i) ? "Hide Trace" : "Thinking Pulse"}
-                                                    <ChevronDown size={12} className={`transition-transform ${showTrace === String(i) ? "rotate-180" : ""}`} />
-                                                </button>
-
-                                                <AnimatePresence>
-                                                    {showTrace === String(i) && (
-                                                        <motion.div
-                                                            initial={{ height: 0, opacity: 0 }}
-                                                            animate={{ height: "auto", opacity: 1 }}
-                                                            exit={{ height: 0, opacity: 0 }}
-                                                            className="mt-2 space-y-1.5"
-                                                        >
-                                                            {m.thought_trace.map((step, idx) => (
-                                                                <div key={idx} className="flex gap-2 items-start text-[11px] font-mono text-slate-400 bg-black/20 p-2 rounded-lg border border-white/5">
-                                                                    <span className="text-primary/50">{idx + 1}.</span>
-                                                                    <span>{step}</span>
-                                                                </div>
-                                                            ))}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        )}
-
-                                        {/* Source Cards */}
-                                        {m.role === "model" && m.sources && m.sources.length > 0 && (
-                                            <div className="mt-4 pt-4 border-t border-white/10">
-                                                <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                                    <Layers size={10} />
-                                                    Citation Vectors
-                                                </div>
-                                                <div className="flex flex-wrap gap-2">
-                                                    {m.sources.map((s, idx) => (
-                                                        <a
-                                                            key={idx}
-                                                            href={s.link}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            className="flex items-center gap-2 text-[10px] bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-xl transition-all border border-white/5 group"
-                                                        >
-                                                            <Search size={10} className="text-primary" />
-                                                            <span className="max-w-[100px] truncate">{s.title || s.source}</span>
-                                                            <ExternalLink size={10} className="opacity-0 group-hover:opacity-100 transition-opacity" />
-                                                        </a>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
+                                        {m.role === "model" && <MessageActions content={m.content} idx={i} copyIdx={copyIdx} onCopy={handleCopy} onShare={handleShare} />}
+                                        {m.role === "model" && m.thought_trace && <ThoughtTraceViewer trace={m.thought_trace} showTrace={showTrace} onToggle={setShowTrace} idx={i} />}
+                                        {m.role === "model" && m.sources && m.sources.length > 0 && <CitationVectors sources={m.sources} />}
                                     </div>
                                     <span className="text-[9px] text-slate-500 mt-1 uppercase font-bold tracking-tighter px-2">
                                         {m.role === "user" ? "Applicant" : "Grantify AI"}
@@ -316,24 +307,7 @@ export default function ChatPanel() {
                                 </div>
                             ))}
 
-                            {loading && (
-                                <div className="flex justify-start">
-                                    <div className="bg-white/5 border border-white/10 p-5 rounded-3xl rounded-tl-none flex flex-col gap-3 w-3/4">
-                                        <div className="flex items-center gap-2">
-                                            <Loader2 size={16} className="animate-spin text-primary" />
-                                            <span className="text-[10px] font-bold text-slate-400 uppercase animate-pulse">Scanning Vector Space...</span>
-                                        </div>
-                                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                                            <motion.div
-                                                initial={{ x: "-100%" }}
-                                                animate={{ x: "100%" }}
-                                                transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
-                                                className="h-full w-1/3 bg-gradient-to-r from-transparent via-primary to-transparent"
-                                            />
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
+                            {loading && <LoadingIndicator />}
                         </div>
 
                         {/* Input Area */}

@@ -1,5 +1,5 @@
 """
-TenderSense AI — Auto-Update Scheduler
+Grantify — Auto-Update Scheduler
 Runs scrapers and re-indexes vectors on a configurable schedule.
 """
 import os

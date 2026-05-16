@@ -1,5 +1,5 @@
 """
-TenderSense AI — Structured Logger
+Grantify — Structured Logger
 Writes JSON-line logs to data/logs with rotation and event tracking.
 """
 import json

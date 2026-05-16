@@ -1,8 +1,4 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-
-// Initialize AI with stable environment variable access
-const genAI = new GoogleGenAI(process.env.GOOGLE_API_KEY || "");
 
 export async function POST(req: Request) {
     try {
@@ -11,8 +7,6 @@ export async function POST(req: Request) {
         if (!process.env.GOOGLE_API_KEY) {
             return NextResponse.json({ error: "Missing GOOGLE_API_KEY" }, { status: 500 });
         }
-
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
         const prompt = `
 You are an elite, expert Grant Writer and Technical Proposal Architect working for Grantify, a premier strategic advisory firm focusing on opportunities in Africa.
@@ -35,8 +29,28 @@ Instructions:
 5. Output ONLY the raw proposal text. Do not include markdown code blocks or introductory conversational filler.
 `;
 
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GOOGLE_API_KEY}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }]
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            console.error("Gemini API Error:", errorData);
+            return NextResponse.json({ error: "Failed to generate AI response from Gemini API." }, { status: response.status });
+        }
+
+        const result = await response.json();
+        const text = result.candidates?.[0]?.content?.parts?.[0]?.text || "No content generated";
 
         return NextResponse.json({ draft: text });
     } catch (error: any) {

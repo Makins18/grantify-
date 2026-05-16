@@ -7,6 +7,7 @@
         "cdg1"
     ],
     "env": {
-        "NEXT_PUBLIC_API_URL": "https://grantify-gateway.vercel.app"
+        "NEXT_PUBLIC_API_URL": "https://grantify-api.vercel.app",
+        "NEXT_PUBLIC_GATEWAY_URL": "https://grantify-gateway.vercel.app"
     }
 }

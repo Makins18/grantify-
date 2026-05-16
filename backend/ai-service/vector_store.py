@@ -1,5 +1,5 @@
 """
-TenderSense AI — Advanced Vector Store
+Grantify — Advanced Vector Store
 Manages ChromaDB-based embeddings of opportunities for semantic search and RAG.
 Uses Google Gemini Embeddings for industry-leading retrieval accuracy.
 """
